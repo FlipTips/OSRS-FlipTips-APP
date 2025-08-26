@@ -1,0 +1,17 @@
+deps & builds,
+node_modules/
+.wrangler/
+dist/
+build/
+.cache/
+
+editor/OS,
+.vscode/
+.DS_Store
+Thumbs.db
+
+logs,
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

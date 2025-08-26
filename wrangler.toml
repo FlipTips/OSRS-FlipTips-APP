@@ -1,0 +1,15 @@
+name = "osrs-flip-worker2"
+main = "src/index.js"
+compatibility_date = "2025-08-17"
+compatibility_flags = ["nodejs_compat"]
+
+# Serve ALL paths on your domain with worker2:
+routes = [
+  { pattern = "osrsfliptips.com/*", zone_name = "osrsfliptips.com" }
+]
+
+# (Optional) Blue/Green staging path you can hit directly:
+# routes = [
+#   { pattern = "osrsfliptips.com/v2/*", zone_name = "osrsfliptips.com" },
+#   { pattern = "osrsfliptips.com/*",   zone_name = "osrsfliptips.com" } # add this when promoting
+# ]
