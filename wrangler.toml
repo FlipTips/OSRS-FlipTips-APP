@@ -3,13 +3,20 @@ main = "src/index.js"
 compatibility_date = "2025-08-17"
 compatibility_flags = ["nodejs_compat"]
 
-# Serve ALL paths on your domain with worker2:
+-------------------------------,
+Production Environment,
+-------------------------------,
+[env.production]
+name = "osrs-flip-prod"
 routes = [
-  { pattern = "osrsfliptips.com/*", zone_name = "osrsfliptips.com" }
+  { pattern = "osrsfliptips.com/", zone_name = "osrsfliptips.com" }
 ]
 
-# (Optional) Blue/Green staging path you can hit directly:
-# routes = [
-#   { pattern = "osrsfliptips.com/v2/*", zone_name = "osrsfliptips.com" },
-#   { pattern = "osrsfliptips.com/*",   zone_name = "osrsfliptips.com" } # add this when promoting
-# ]
+-------------------------------,
+Staging Environment,
+-------------------------------,
+[env.staging]
+name = "osrs-flip-staging"
+routes = [
+  { pattern = "osrsfliptips.com/v2/", zone_name = "osrsfliptips.com" }
+]
