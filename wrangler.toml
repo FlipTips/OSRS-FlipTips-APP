@@ -1,23 +1,18 @@
-── Cloudflare Workers config ─────────────────────────────────────────────,
-Paste this into wrangler.toml (replace everything inside the file),
-name = "osrs-flip-worker2"        # script name for local/dev
-main = "src/index.js"             # entrypoint
+name = "osrs-flip-worker2"
+main = "src/index.js"
 compatibility_date = "2025-08-17"
 compatibility_flags = ["nodejs_compat"]
 
-If you have static assets later, point this at your folder and uncomment:,
-[site],
-bucket = "./public",
-── Production (live at root) ─────────────────────────────────────────────,
-[env.production]
-name = "osrs-flip-prod"           # the deployed script name in prod
+# --- STAGING (/v2/*) ---
+[env.staging]
+name = "osrs-flip-staging"
 routes = [
-  { pattern = "osrsfliptips.com/", zone_name = "osrsfliptips.com" }
+  { pattern = "osrsfliptips.com/v2/*", zone_name = "osrsfliptips.com" }
 ]
 
-── Staging (safe testing at /v2) ─────────────────────────────────────────,
-[env.staging]
-name = "osrs-flip-staging"        # the deployed script name in staging
+# --- PRODUCTION (/*) ---
+[env.production]
+name = "osrs-flip-prod"
 routes = [
-  { pattern = "osrsfliptips.com/v2/", zone_name = "osrsfliptips.com" }
+  { pattern = "osrsfliptips.com/*", zone_name = "osrsfliptips.com" }
 ]
