@@ -107,41 +107,66 @@ const img = item.image ?? item.icon ?? item.sprite ?? null;
 return { buy, sell, margin, roi, highAlch, vol1h, geLimit, img };
 }
 
-function render(list){
-const q = (el.search.value || '').toLowerCase().trim();
-const per = parseInt(el.perPage.value, 10) || 25;
+function render(list) {
+  // 1) read controls
+  const q   = (el.search.value || '').toLowerCase().trim();
+  const per = parseInt(el.perPage.value, 10) || 25;
 
-let rows = list;
-if (q) rows = rows.filter(x => (x.name || x.item || '').toLowerCase().includes(q));
+  // 2) normalize & filter
+  let rows = Array.isArray(list) ? list : [];
+  if (q) {
+    rows = rows.filter(x =>
+      ((x.name || x.item || '') + ' ' + (x.id ?? '')).toLowerCase().includes(q)
+    );
+  }
 
-el.total.textContent = rows.length ? ('Total: ' + rows.length.toLocaleString('en-US')) : '';
-rows = rows.slice(0, per);
+  // 3) total + slice
+  el.total.textContent = rows.length
+    ? ('Total: ' + rows.length.toLocaleString('en-US'))
+    : '';
+  rows = rows.slice(0, per);
 
-const html = rows.map(item => {
-const d = derive(item);
-const name = item.name ?? item.item ?? 'Unknown item';
-return `
+  // 4) render cards
+  const html = rows.map(item => {
+    // derive() already maps the possible price/vol/limit fields into stable names
+    const d    = derive(item);
+    const name = item.name ?? item.item ?? 'Unknown item';
+
+    // wiki link: prefer numeric id if present, otherwise fall back to item name
+    const wikiId   = item.id ?? item.wikiId ?? item.itemId ?? null;
+    const wikiHref = wikiId
+      ? `https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=${wikiId}`
+      : `https://oldschool.runescape.wiki/w/${encodeURIComponent((name || '').replace(/\s+/g, '_'))}`;
+
+    // margin/roi styling
+    const marginCls = (d.margin ?? 0) >= 0 ? 'good' : 'bad';
+
+    return `
 <article class="card">
-<h3 class="truncate">${name}</h3>
-<div class="kv">
-<div><strong>Instant Buy (you pay)</strong> ${fmt(d.buy)} gp</div>
-<div><strong>Instant Sell (you receive)</strong> ${fmt(d.sell)} gp</div>
-<div><strong>Yield after tax</strong> <span class="${(d.margin ?? 0) >= 0 ? 'good' : 'bad'}">${fmt(d.margin)} gp</span></div>
-<div><strong>ROI</strong> ${pct(d.roi)}</div>
-<div><strong>GE buy limit</strong> ${fmt(d.geLimit)}</div>
-<div><strong>1h vol</strong> ${fmt(d.vol1h)}</div>
-<div><strong>High Alch</strong> ${fmt(d.highAlch)} gp</div>
-</div>
-${d.img ? `<img class="sprite" alt="" src="${d.img}">` : ''}
-<div class="links">
-<a class="btn" href="https://prices.osrs.cloud" target="_blank" rel="noopener">prices.osrs.cloud</a>
-<a class="btn" href="https://oldschool.runescape.wiki/w/Grand_Exchange" target="_blank" rel="noopener">Wiki Price</a>
-</div>
+  <h3 class="truncate">${name}</h3>
+  <div class="kv">
+    <div><strong>Instant Buy (you pay)</strong> ${fmt(d.buy)} gp</div>
+    <div><strong>Instant Sell (you receive)</strong> ${fmt(d.sell)} gp</div>
+    <div><strong>Yield after tax</strong> <span class="${marginCls}">${fmt(d.margin)} gp</span></div>
+    <div><strong>ROI</strong> ${pct(d.roi)}</div>
+    <div><strong>GE buy limit</strong> ${fmt(d.geLimit)}</div>
+    <div><strong>1h vol</strong> ${fmt(d.vol1h)}</div>
+    <div><strong>High Alch</strong> ${fmt(d.highAlch)} gp</div>
+  </div>
+
+  ${d.img ? `<img class="sprite" alt="" src="${d.img}">` : ''}
+
+  <div class="links">
+    <a class="btn" href="https://prices.osrs.cloud" target="_blank" rel="noopener">prices.osrs.cloud</a>
+    <a class="btn" href="${wikiHref}" target="_blank" rel="noopener">Wiki</a>
+  </div>
 </article>
 `;
-}).join('');
-el.cards.innerHTML = html || '<div class="muted">No items.</div>';
+  }).join('');
+
+  el.cards.innerHTML = html || '<div class="muted">No items.</div>';
 }
+
 
 async function load(){
 try {
