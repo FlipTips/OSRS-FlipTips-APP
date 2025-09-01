@@ -1,0 +1,18 @@
+/* FlipTips parchment UI */
+#ft-header{position:sticky;top:0;z-index:50;width:100%;background:#17120bcc;border-bottom:1px solid #3a2d16;backdrop-filter:saturate(1.2) blur(6px)}
+#ft-header .inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+#ft-header a{color:#e8d7b7;text-decoration:none}
+#ft-header a:hover{color:#fff}
+
+.ft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin:12px 0}
+
+.ft-card{position:relative;border-radius:10px;border:1px solid #3a2d16;background-color:#1a140b;background-image:url("/assets/card-parchment.png");background-size:cover;background-repeat:no-repeat;background-position:center;padding:14px 14px 12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.ft-card-inner{display:grid;grid-template-rows:auto 1fr auto;gap:8px}
+.ft-item-img{width:88px;height:88px;object-fit:contain;image-rendering:pixelated;display:block;margin:4px auto 6px auto}
+.ft-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;font-size:14px;line-height:1.2;color:#1f1609}
+.ft-row .k{color:#5b4522;font-weight:600}
+.ft-row .v{color:#2c1d08;font-weight:600}
+.ft-pos{color:#2e7d32}.ft-neg{color:#c62828}
+.ft-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ft-link{background:#f0e1bf;border:1px solid #c6ae7a;border-radius:6px;padding:4px 8px;color:#3a2d16;text-decoration:none;font-size:12px}
+.ft-link:hover{background:#fae8be}
