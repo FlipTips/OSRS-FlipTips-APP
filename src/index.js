@@ -45,9 +45,9 @@ border:1px solid var(--border);color:var(--paper-ink)
 .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
 .kv>div{
 background:linear-gradient(#fff7dd,#f2e7c9);border:1px solid var(--border);border-radius:12px;padding:10px;
-min-height:52px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)
+min-        min-height:52px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);font-size:.9rem
 }
-.kv strong{display:block;font-size:.78rem;color:#7a6a4d;margin-bottom:4px}
+.kv strong{display:block;font-size:.75rem;color:#7a6a4d;margin-bottom:4px}
 .good{color:var(--good);font-weight:700}.bad{color:var(--bad);font-weight:700}
 .sprite{position:absolute;right:12px;bottom:12px;width:68px;height:68px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));pointer-events:none;opacity:.95}
 .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -146,7 +146,7 @@ function render(list) {
   <h3 class="truncate">${name}</h3>
   <div class="kv">
     <div><strong>Instant Buy (you pay)</strong> ${fmt(d.buy)} gp</div>
-    <div><strong>Instant Sell (you receive)</strong> ${fmt(d.sell)} gp</div>
+    <        <div><strong>Instant Sell (you receive)</strong> <span class="${marginCls}">${fmt(d.sell)} gp</span></div>
     <div><strong>Yield after tax</strong> <span class="${marginCls}">${fmt(d.margin)} gp</span></div>
     <div><strong>ROI</strong> ${pct(d.roi)}</div>
     <div><strong>GE buy limit</strong> ${fmt(d.geLimit)}</div>
