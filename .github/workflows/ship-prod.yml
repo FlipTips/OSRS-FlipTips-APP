@@ -1,4 +1,5 @@
 name: Ship to Production
+
 on:
   workflow_dispatch:
     inputs:
@@ -6,22 +7,18 @@ on:
         description: "Type SHIP to confirm deployment to production"
         required: true
         default: ""
+
 jobs:
   deploy:
     if: ${{ github.event.inputs.confirm == 'SHIP' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
+          cache: 'npm'
+      - run: npm install --legacy-peer-deps
       - run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
       - run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
