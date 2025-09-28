@@ -1,0 +1,153 @@
+name: Deploy Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.CF_API_TOKEN }}" ]; then
+            echo "❌ CF_API_TOKEN secret is missing. Please add it to repository secrets."
+            echo ""
+            echo "Required secrets for preview deployment:"
+            echo "- CF_API_TOKEN: Cloudflare API token with Workers deploy permissions"
+            echo "- CF_ACCOUNT_ID: Cloudflare account ID (optional if set in wrangler.toml)"
+            echo ""
+            echo "See docs/preview-deploy.md for detailed setup instructions."
+            exit 1
+          fi
+          echo "✅ Required secrets are available"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Deploy to staging environment
+        id: deploy
+        run: |
+          echo "🚀 Deploying to Cloudflare staging environment..."
+          
+          # Deploy using wrangler to staging environment
+          OUTPUT=$(npx wrangler deploy --env staging 2>&1)
+          echo "$OUTPUT"
+          
+          # Extract preview URL from wrangler output
+          # Look for various URL patterns that wrangler might output
+          PREVIEW_URL=$(echo "$OUTPUT" | grep -Eo 'https://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[/a-zA-Z0-9._-]*' | head -1)
+          
+          if [ -z "$PREVIEW_URL" ]; then
+            # Try alternative pattern for workers URLs
+            PREVIEW_URL=$(echo "$OUTPUT" | grep -Eo 'https://[^[:space:]]*workers\.dev[^[:space:]]*' | head -1)
+          fi
+          
+          if [ -z "$PREVIEW_URL" ]; then
+            # Try to extract from custom domain routes
+            PREVIEW_URL=$(echo "$OUTPUT" | sed -n 's/.*https:\/\/\([^[:space:]]*\).*/https:\/\/\1/p' | head -1)
+          fi
+          
+          if [ -n "$PREVIEW_URL" ]; then
+            echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+            echo "✅ Deployment successful!"
+            echo "🌐 Preview URL: $PREVIEW_URL"
+          else
+            echo "⚠️  Deployment completed but could not extract preview URL from output"
+            echo "📝 Manual preview URL: https://osrsfliptips.com/v2/"
+            echo "preview_url=https://osrsfliptips.com/v2/" >> $GITHUB_OUTPUT
+            echo ""
+            echo "Full deployment output:"
+            echo "$OUTPUT"
+          fi
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request' && steps.deploy.outputs.preview_url
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = '${{ steps.deploy.outputs.preview_url }}';
+            const comment = `## 🚀 Preview Deployment Ready!
+            
+            Your changes have been deployed and are ready for testing:
+            
+            **🌐 Preview URL:** ${previewUrl}
+            
+            ### Testing Instructions
+            1. Click the preview URL above to view your changes
+            2. Test the parchment item cards on different devices
+            3. Verify all functionality works as expected
+            4. Check the look and behavior of the restored historical cards
+            
+            This preview will automatically update when you push new changes to this PR.
+            
+            ---
+            *Deployed from commit: \`${{ github.sha }}\`*
+            *Environment: Cloudflare Workers Staging*`;
+            
+            // Find existing preview comment to update it
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.body.includes('🚀 Preview Deployment')
+            );
+            
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+              console.log('Updated existing preview comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+              console.log('Created new preview comment');
+            }
+
+      - name: Add deployment summary
+        if: steps.deploy.outputs.preview_url
+        run: |
+          echo "## 🚀 Preview Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**🌐 Preview URL:** ${{ steps.deploy.outputs.preview_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Deployment Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Cloudflare Workers Staging" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.head_ref || github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Testing Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Preview loads correctly" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Parchment item cards display properly" >> $GITHUB_STEP_SUMMARY  
+          echo "- [ ] Historical cards show View + Wiki links" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] ROI displays as percentage" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Yield shows in GP" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Mobile/tablet responsive design works" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The preview is now live and ready for the testing team! 🎉" >> $GITHUB_STEP_SUMMARY

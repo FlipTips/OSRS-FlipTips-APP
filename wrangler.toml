@@ -3,6 +3,9 @@ main = "src/index.js"
 compatibility_date = "2025-08-17"
 compatibility_flags = ["nodejs_compat"]
 
+# Account ID can be specified here or as CF_ACCOUNT_ID environment variable
+# account_id = "your-account-id-here"
+
 # --- STAGING (/v2/*) ---
 [env.staging]
 name = "osrs-flip-staging"
