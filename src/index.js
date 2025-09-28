@@ -45,7 +45,7 @@ border:1px solid var(--border);color:var(--paper-ink)
 .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
 .kv>div{
 background:linear-gradient(#fff7dd,#f2e7c9);border:1px solid var(--border);border-radius:12px;padding:10px;
-min-        min-height:52px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);font-size:.9rem
+min-height:52px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);font-size:.9rem
 }
 .kv strong{display:block;font-size:.75rem;color:#7a6a4d;margin-bottom:4px}
 .good{color:var(--good);font-weight:700}.bad{color:var(--bad);font-weight:700}
@@ -135,33 +135,33 @@ function render(list) {
     // wiki link: prefer numeric id if present, otherwise fall back to item name
     const wikiId   = item.id ?? item.wikiId ?? item.itemId ?? null;
     const wikiHref = wikiId
-      ? `https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=${wikiId}`
-      : `https://oldschool.runescape.wiki/w/${encodeURIComponent((name || '').replace(/\s+/g, '_'))}`;
+      ? \`https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=\${wikiId}\`
+      : \`https://oldschool.runescape.wiki/w/\${encodeURIComponent((name || '').replace(/\\s+/g, '_'))}\`;
 
     // margin/roi styling
     const marginCls = (d.margin ?? 0) >= 0 ? 'good' : 'bad';
 
-    return `
+    return \`
 <article class="card">
-  <h3 class="truncate">${name}</h3>
+  <h3 class="truncate">\${name}</h3>
   <div class="kv">
-    <div><strong>Instant Buy (you pay)</strong> ${fmt(d.buy)} gp</div>
-    <        <div><strong>Instant Sell (you receive)</strong> <span class="${marginCls}">${fmt(d.sell)} gp</span></div>
-    <div><strong>Yield after tax</strong> <span class="${marginCls}">${fmt(d.margin)} gp</span></div>
-    <div><strong>ROI</strong> ${pct(d.roi)}</div>
-    <div><strong>GE buy limit</strong> ${fmt(d.geLimit)}</div>
-    <div><strong>1h vol</strong> ${fmt(d.vol1h)}</div>
-    <div><strong>High Alch</strong> ${fmt(d.highAlch)} gp</div>
+    <div><strong>Instant Buy (you pay)</strong> \${fmt(d.buy)} gp</div>
+    <div><strong>Instant Sell (you receive)</strong> <span class="\${marginCls}">\${fmt(d.sell)} gp</span></div>
+    <div><strong>Yield after tax</strong> <span class="\${marginCls}">\${fmt(d.margin)} gp</span></div>
+    <div><strong>ROI</strong> \${pct(d.roi)}</div>
+    <div><strong>GE buy limit</strong> \${fmt(d.geLimit)}</div>
+    <div><strong>1h vol</strong> \${fmt(d.vol1h)}</div>
+    <div><strong>High Alch</strong> \${fmt(d.highAlch)} gp</div>
   </div>
 
-  ${d.img ? `<img class="sprite" alt="" src="${d.img}">` : ''}
+  \${d.img ? \`<img class="sprite" alt="" src="\${d.img}">\` : ''}
 
   <div class="links">
     <a class="btn" href="https://prices.osrs.cloud" target="_blank" rel="noopener">prices.osrs.cloud</a>
-    <a class="btn" href="${wikiHref}" target="_blank" rel="noopener">Wiki</a>
+    <a class="btn" href="\${wikiHref}" target="_blank" rel="noopener">Wiki</a>
   </div>
 </article>
-`;
+\`;
   }).join('');
 
   el.cards.innerHTML = html || '<div class="muted">No items.</div>';
