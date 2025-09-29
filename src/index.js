@@ -161,7 +161,11 @@ function render(list) {
     const wikiId   = item.id ?? item.wikiId ?? item.itemId ?? null;
     const wikiHref = wikiId
       ? 'https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=' + wikiId
+
+      : 'https://oldschool.runescape.wiki/w/' + encodeURIComponent((name || '').replace(/\s+/g, '_'));
+
       : 'https://oldschool.runescape.wiki/w/' + encodeURIComponent((name || '').replace(/\\s+/g, '_'));
+
 
     // margin/roi styling
     const marginCls = (d.margin ?? 0) >= 0 ? 'good' : 'bad';
