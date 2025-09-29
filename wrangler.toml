@@ -3,6 +3,9 @@ main = "src/index.js"
 compatibility_date = "2025-08-13"
 compatibility_flags = ["nodejs_compat"]
 
+[site]
+bucket = "./public"
+
 # --- STAGING (/v2/*) ---
 [env.staging]
 name = "osrs-flip-staging"

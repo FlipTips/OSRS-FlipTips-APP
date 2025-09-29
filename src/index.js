@@ -3,6 +3,12 @@ export default {
 async fetch(req, env, ctx) {
 const url = new URL(req.url);
 
+
+// Serve UI at /, /v2, and /item/:id
+if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/v2" || url.pathname.startsWith("/item/"))) {
+const isItemDetail = url.pathname.startsWith("/item/");
+const itemId = isItemDetail ? url.pathname.split("/item/")[1] : null;
+
 // API endpoint for item data
 if (req.method === "GET" && url.pathname === "/api/list") {
   // Return mock data for now - in production this would fetch from a real API
@@ -31,6 +37,7 @@ if (req.method === "GET" && url.pathname === "/api/list") {
 
 // Serve UI at / and /v2
 if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/v2")) {
+
 const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,12 +66,13 @@ button{padding:9px 12px;border-radius:10px;cursor:pointer;border:1px solid var(-
 @media(min-width:760px){.cards{grid-template-columns:1fr 1fr}}
 
 .card{
-position:relative;padding:16px 16px 64px 16px;border-radius:var(--radius);box-shadow:var(--shadow);
-background:
-radial-gradient(1200px 600px at 50% -200px,rgba(0,0,0,.08),rgba(0,0,0,0) 70%),
-linear-gradient(180deg,rgba(120,88,28,.08),rgba(120,88,28,.03) 40%,rgba(0,0,0,.06) 100%),
-var(--paper);
-border:1px solid var(--border);color:var(--paper-ink)
+position:relative;padding:20px 20px 70px 20px;border-radius:var(--radius);box-shadow:var(--shadow);
+background-image: url('/assets/ui/card-parchment.png');
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+border:1px solid var(--border);color:var(--paper-ink);
+min-height: 200px;
 }
 .card h3{margin:0 0 8px;font-weight:800}
 .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
@@ -79,6 +87,84 @@ min-height:52px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);font-size:.9rem
 .btn{padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:linear-gradient(#fff7dd,#f3e9cb);color:var(--paper-ink);text-decoration:none}
 .truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:420px){body{font-size:15px}.kv{grid-template-columns:1fr}.sprite{width:56px;height:56px;opacity:.9}}
+
+.compact-card .kv {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.expanded-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.expanded-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.expanded-kv {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media(max-width:768px) {
+  .expanded-kv {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media(max-width:480px) {
+  .expanded-kv {
+    grid-template-columns: 1fr;
+  }
+}
+
+.graphs-placeholder {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(#fff7dd, #f2e7c9);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.graphs-placeholder h3 {
+  margin: 0 0 16px;
+  color: var(--paper-ink);
+}
+
+.graph-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.graph-tab {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  color: var(--paper-ink);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.graph-tab.active {
+  background: linear-gradient(#fff7dd, #f3e9cb);
+  font-weight: 600;
+}
+
+.graph-container {
+  min-height: 200px;
+  padding: 20px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
 </style>
 </head>
 <body>
@@ -107,6 +193,9 @@ min-height:52px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);font-size:.9rem
 </main>
 
 <script>
+const isItemDetail = ${isItemDetail};
+const itemId = '${itemId || ''}';
+
 const el = {
 cards: document.getElementById('cards'),
 search: document.getElementById('search'),
@@ -132,7 +221,90 @@ const img = item.image ?? item.icon ?? item.sprite ?? null;
 return { buy, sell, margin, roi, highAlch, vol1h, geLimit, img };
 }
 
+function renderCompactCard(item) {
+  const d = derive(item);
+  const name = item.name ?? item.item ?? 'Unknown item';
+  const wikiId = item.id ?? item.wikiId ?? item.itemId ?? null;
+  const wikiHref = wikiId
+    ? 'https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=' + wikiId
+    : 'https://oldschool.runescape.wiki/w/' + encodeURIComponent((name || '').replace(/\\s+/g, '_'));
+  const marginCls = (d.margin ?? 0) >= 0 ? 'good' : 'bad';
+
+  return '<article class="card compact-card">' +
+    '<h3 class="truncate">' + name + '</h3>' +
+    '<div class="kv">' +
+      '<div><strong>Buy</strong> ' + fmt(d.buy) + ' gp</div>' +
+      '<div><strong>Sell</strong> <span class="' + marginCls + '">' + fmt(d.sell) + ' gp</span></div>' +
+      '<div><strong>Yield</strong> <span class="' + marginCls + '">' + fmt(d.margin) + ' gp</span></div>' +
+      '<div><strong>ROI</strong> ' + pct(d.roi) + '</div>' +
+    '</div>' +
+    (d.img ? '<img class="sprite" alt="" src="' + d.img + '">' : '') +
+    '<div class="links">' +
+      '<a class="btn" href="/item/' + (wikiId || encodeURIComponent(name)) + '">View</a>' +
+      '<a class="btn" href="' + wikiHref + '" target="_blank" rel="noopener">Wiki Price</a>' +
+    '</div>' +
+  '</article>';
+}
+
+function renderExpandedCard(item) {
+  const d = derive(item);
+  const name = item.name ?? item.item ?? 'Unknown item';
+  const wikiId = item.id ?? item.wikiId ?? item.itemId ?? null;
+  const wikiHref = wikiId
+    ? 'https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=' + wikiId
+    : 'https://oldschool.runescape.wiki/w/' + encodeURIComponent((name || '').replace(/\\s+/g, '_'));
+  const marginCls = (d.margin ?? 0) >= 0 ? 'good' : 'bad';
+
+  return '<article class="card expanded-card">' +
+    '<h2>' + name + '</h2>' +
+    '<div class="kv expanded-kv">' +
+      '<div><strong>Instant Buy (you pay)</strong> ' + fmt(d.buy) + ' gp</div>' +
+      '<div><strong>Instant Sell (you receive)</strong> <span class="' + marginCls + '">' + fmt(d.sell) + ' gp</span></div>' +
+      '<div><strong>Yield after tax</strong> <span class="' + marginCls + '">' + fmt(d.margin) + ' gp</span></div>' +
+      '<div><strong>ROI</strong> ' + pct(d.roi) + '</div>' +
+      '<div><strong>GE buy limit</strong> ' + fmt(d.geLimit) + '</div>' +
+      '<div><strong>1h vol</strong> ' + fmt(d.vol1h) + '</div>' +
+      '<div><strong>High Alch</strong> ' + fmt(d.highAlch) + ' gp</div>' +
+    '</div>' +
+    (d.img ? '<img class="sprite" alt="" src="' + d.img + '">' : '') +
+    '<div class="links">' +
+      '<a class="btn" href="/">← Back to List</a>' +
+      '<a class="btn" href="' + wikiHref + '" target="_blank" rel="noopener">Wiki Price</a>' +
+    '</div>' +
+    '<div class="graphs-placeholder">' +
+      '<h3>Price History</h3>' +
+      '<div class="graph-tabs">' +
+        '<button class="graph-tab active">24h</button>' +
+        '<button class="graph-tab">1w</button>' +
+        '<button class="graph-tab">1m</button>' +
+        '<button class="graph-tab">6m</button>' +
+        '<button class="graph-tab">1y</button>' +
+      '</div>' +
+      '<div class="graph-container">' +
+        '<p>Price history graphs will be implemented here</p>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
+}
+
 function render(list) {
+  // If on item detail page, show only that item with expanded view
+  if (isItemDetail && itemId) {
+    const item = list.find(x => 
+      (x.id && x.id.toString() === itemId) || 
+      (x.name && encodeURIComponent(x.name) === itemId)
+    );
+    
+    if (item) {
+      el.cards.innerHTML = renderExpandedCard(item);
+      // Hide controls on item detail page
+      if (el.search.parentElement) el.search.parentElement.style.display = 'none';
+      if (el.perPage.parentElement) el.perPage.parentElement.style.display = 'none';
+      if (el.total) el.total.style.display = 'none';
+      return;
+    }
+  }
+
   // 1) read controls
   const q   = (el.search.value || '').toLowerCase().trim();
   const per = parseInt(el.perPage.value, 10) || 25;
@@ -152,6 +324,9 @@ function render(list) {
   rows = rows.slice(0, per);
 
   // 4) render cards
+
+  const html = rows.map(item => renderCompactCard(item)).join('');
+
   const html = rows.map(item => {
     // derive() already maps the possible price/vol/limit fields into stable names
     const d    = derive(item);
@@ -188,6 +363,7 @@ function render(list) {
       '</div>' +
     '</article>';
   }).join('');
+
 
   el.cards.innerHTML = html || '<div class="muted">No items.</div>';
 }
