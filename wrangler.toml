@@ -1,6 +1,6 @@
 name = "osrs-flip-worker2"
 main = "src/index.js"
-compatibility_date = "2025-08-17"
+compatibility_date = "2025-08-13"
 compatibility_flags = ["nodejs_compat"]
 
 [site]
