@@ -1,8 +1,33 @@
-
 // src/index.js — FULL REPLACEMENT (inline parchment CSS + UI + renderer)
 export default {
 async fetch(req, env, ctx) {
 const url = new URL(req.url);
+
+// API endpoint for item data
+if (req.method === "GET" && url.pathname === "/api/list") {
+  // Return mock data for now - in production this would fetch from a real API
+  const mockData = [
+    {
+      id: 554,
+      name: "Fire rune",
+      buy: 5,
+      sell: 6,
+      margin: 1,
+      roi: 0.2,
+      highAlch: 1,
+      vol1h: 1000,
+      geLimit: 25000,
+      image: "https://oldschool.runescape.wiki/images/thumb/4/4c/Fire_rune.png/21px-Fire_rune.png"
+    }
+  ];
+  
+  return new Response(JSON.stringify(mockData), {
+    headers: { 
+      "content-type": "application/json",
+      "access-control-allow-origin": "*"
+    }
+  });
+}
 
 // Serve UI at / and /v2
 if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/v2")) {
@@ -136,7 +161,11 @@ function render(list) {
     const wikiId   = item.id ?? item.wikiId ?? item.itemId ?? null;
     const wikiHref = wikiId
       ? 'https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=' + wikiId
+
       : 'https://oldschool.runescape.wiki/w/' + encodeURIComponent((name || '').replace(/\s+/g, '_'));
+
+      : 'https://oldschool.runescape.wiki/w/' + encodeURIComponent((name || '').replace(/\\s+/g, '_'));
+
 
     // margin/roi styling
     const marginCls = (d.margin ?? 0) >= 0 ? 'good' : 'bad';
